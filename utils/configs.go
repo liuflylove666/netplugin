@@ -67,13 +67,31 @@ func BuildDBFlags(binary string) []cli.Flag {
 			EnvVar: fmt.Sprintf("CONTIV_%s_CONSUL_ENDPOINTS", binUpper),
 			Usage:  fmt.Sprintf("a comma-delimited list of %s consul endpoints", binLower),
 		},
+		cli.StringFlag{
+			Name:   "cluster-tls-cert",
+			EnvVar: fmt.Sprintf("CONTIV_%s_ETCD_TLS_CERT", binUpper),
+			Usage:  fmt.Sprintf("a comma-delimited list of %s cluster-tls-cert", binLower),
+		},
+		cli.StringFlag{
+			Name:   "cluster-tls-ca",
+			EnvVar: fmt.Sprintf("CONTIV_%s_ETCD_TLS_CA", binUpper),
+			Usage:  fmt.Sprintf("a comma-delimited list of %s cluster-tls-ca", binLower),
+		},
+		cli.StringFlag{
+			Name:   "cluster-tls-key",
+			EnvVar: fmt.Sprintf("CONTIV_%s_ETCD_TLS_KEY", binUpper),
+			Usage:  fmt.Sprintf("a comma-delimited list of %s cluster-tls-key", binLower),
+		},
 	}
 }
 
 // DBConfigs validated db configs
 type DBConfigs struct {
 	StoreDriver string
-	StoreURL    string
+	StoreURL    []string
+	DbTLSCert    string
+	DbTLSKey     string
+	DbTLSCa      string
 }
 
 // BuildLogFlags CLI logging flags for given binary
@@ -177,10 +195,18 @@ func InitLogging(binary string, ctx *cli.Context) error {
 // ValidateDBOptions returns error if db options are not valid
 func ValidateDBOptions(binary string, ctx *cli.Context) (*DBConfigs, error) {
 	var storeDriver string
-	var storeURL string
 	var storeURLs string
+	var storeKey string
+	var storeCa  string
+	var storeCert string
+
+
+	storeURL := []string{}
 	etcdURLs := ctx.String("etcd")
 	consulURLs := ctx.String("consul")
+	etcdKey := ctx.String("cluster-tls-key")
+	etcdCert := ctx.String("cluster-tls-cert")
+	etcdCa := ctx.String("cluster-tls-ca")
 
 	if etcdURLs != "" && consulURLs != "" {
 		return nil, fmt.Errorf("ambiguous %s db endpoints, both etcd and consul specified: etcd: %s, consul: %s", binary, etcdURLs, consulURLs)
@@ -188,9 +214,17 @@ func ValidateDBOptions(binary string, ctx *cli.Context) (*DBConfigs, error) {
 		// if neither etcd or consul is set, try etcd at http://127.0.0.1:2379
 		storeDriver = "etcd"
 		storeURLs = "http://127.0.0.1:2379"
+
 	} else if etcdURLs != "" {
 		storeDriver = "etcd"
 		storeURLs = etcdURLs
+		if len(etcdKey) != 0 && len(etcdCert) != 0 && len(etcdCa) != 0 {
+			storeKey = etcdKey
+			storeCa = etcdCa
+			storeCert = etcdCert
+		}
+
+
 	} else {
 		storeDriver = "consul"
 		storeURLs = consulURLs
@@ -201,18 +235,23 @@ func ValidateDBOptions(binary string, ctx *cli.Context) (*DBConfigs, error) {
 			return nil, fmt.Errorf("invalid %s %v endpoint: %v", binary, storeDriver, endpoint)
 		}
 		// TODO: support multi-endpoints
-		storeURL = endpoint
+		storeURL = append(storeURL,endpoint)
 		logrus.Infof("Using %s state db endpoints: %v: %v", binary, storeDriver, storeURL)
-		break
+
 	}
 
-	if storeURL == "" {
+	if len(storeURL) == 0 {
 		return nil, fmt.Errorf("invalid %s %s endpoints: empty", binary, storeDriver)
 	}
+
+
 
 	return &DBConfigs{
 		StoreDriver: storeDriver,
 		StoreURL:    storeURL,
+		DbTLSCert:	 storeCert,
+		DbTLSKey:	storeKey,
+		DbTLSCa: 	storeCa,
 	}, nil
 }
 

@@ -16,6 +16,7 @@ limitations under the License.
 package objdb
 
 import (
+	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"strings"
@@ -49,7 +50,7 @@ func init() {
 }
 
 // Init initializes the consul client
-func (cp *consulPlugin) NewClient(endpoints []string) (API, error) {
+func (cp *consulPlugin) NewClient(endpoints []string, tlsConfig *tls.Config) (API, error) {
 	cc := new(ConsulClient)
 
 	if len(endpoints) == 0 {

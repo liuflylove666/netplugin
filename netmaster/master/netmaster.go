@@ -100,12 +100,14 @@ func CreateGlobal(stateDriver core.StateDriver, gc *intent.ConfigGlobal) error {
 	masterGc.StateDriver = stateDriver
 	masterGc.Read("global")
 
+	log.Infof("Received global create with intent2 {%v}", gc)
 	gstate.GlobalMutex.Lock()
 	defer gstate.GlobalMutex.Unlock()
 	gCfg := &gstate.Cfg{}
 	gCfg.StateDriver = stateDriver
 	gCfg.Read("global")
 
+	log.Infof("Received global create with intent3 {%v}", gc)
 	// check for valid values
 	if gc.NwInfraType != "" {
 		switch gc.NwInfraType {
@@ -146,12 +148,13 @@ func CreateGlobal(stateDriver core.StateDriver, gc *intent.ConfigGlobal) error {
 		masterGc.PvtSubnet = gc.PvtSubnet
 	}
 
+	log.Infof("111111Receivedi:%+v", gc)
 	if len(gcfgUpdateList) > 0 {
 		// Delete old state
-
 		gOper := &gstate.Oper{}
 		gOper.StateDriver = stateDriver
 		err = gOper.Read("")
+		
 		if err == nil {
 			for _, res := range gcfgUpdateList {
 				err = gCfg.UpdateResources(res)
@@ -160,23 +163,25 @@ func CreateGlobal(stateDriver core.StateDriver, gc *intent.ConfigGlobal) error {
 				}
 			}
 		} else {
-
+			
 			for _, res := range gcfgUpdateList {
 				// setup resources
 				err = gCfg.Process(res)
+				
 				if err != nil {
 					log.Errorf("Error updating the config %+v. Error: %s", gCfg, err)
 					return err
 				}
 			}
 		}
-
+		
 		err = gCfg.Write()
 		if err != nil {
 			log.Errorf("error updating global config.Error: %s", err)
 			return err
 		}
 	}
+	log.Infof("111111Received global Write:%+v", gc)
 	return masterGc.Write()
 }
 

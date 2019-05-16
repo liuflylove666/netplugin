@@ -93,6 +93,7 @@ if [ "$CONTIV_ROLE" = "netmaster" ]; then
     while  true ; do
         echo "INFO: Starting contiv netmaster"
         set -x
+	echo "$@"
         /contiv/bin/netmaster "$@" &>> "$CONTIV_LOG_DIR/netmaster.log"
         set +x
         echo "ERROR: Contiv netmaster has exited, restarting in 5s"
@@ -103,6 +104,7 @@ fi
 while true ; do
     echo "INFO: Starting contiv netplugin"
     set -x
+    echo "$@"
     /contiv/bin/netplugin "$@" &>> "$CONTIV_LOG_DIR/netplugin.log"
     set +x
     echo "ERROR: Contiv netplugin has exited, restarting in 5s"

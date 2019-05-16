@@ -152,6 +152,31 @@
           "Value": "http://127.0.0.1:2379"
        },
        {
+          "Description": "a comma-delimited list of netmaster etcd key",
+          "Name": "CONTIV_NETMASTER_ETCD_TLS_KEY",
+          "Settable": [
+             "value"
+          ],
+          "Value": ""
+       },
+       {
+          "Description": "a comma-delimited list of netmaster etcd cert",
+          "Name": "CONTIV_NETMASTER_ETCD_TLS_CERT",
+          "Settable": [
+             "value"
+          ],
+          "Value": ""
+       },
+       {
+          "Description": "a comma-delimited list of netmaster etcd ca",
+          "Name": "CONTIV_NETMASTER_ETCD_TLS_CA",
+          "Settable": [
+             "value"
+          ],
+          "Value": ""
+       },
+
+       {
           "Description": "netmaster forwarding network mode, options: [bridge, routing]",
           "Name": "CONTIV_NETMASTER_FORWARD_MODE",
           "Settable": [

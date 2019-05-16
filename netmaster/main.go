@@ -37,6 +37,9 @@ type cliOpts struct {
 	debug        bool
 	pluginName   string
 	clusterStore string
+	clusterTLSCert   string
+	clusterTLSKey    string
+	clusterTLSCaCert string
 	listenURL    string
 	controlURL   string
 	clusterMode  string
@@ -62,6 +65,7 @@ func initNetMaster(ctx *cli.Context) (*daemon.MasterDaemon, error) {
 	if err != nil {
 		return nil, err
 	}
+
 
 	// 4. set v2 plugin name if it's set
 	pluginName := ctx.String("name")
@@ -103,11 +107,15 @@ func initNetMaster(ctx *cli.Context) (*daemon.MasterDaemon, error) {
 		return nil, fmt.Errorf("Unknown netmaster infra type: %s", infra)
 	}
 
+	logrus.Infof("dbConfigs++++:%+v", dbConfigs)
 	return &daemon.MasterDaemon{
 		ListenURL:          externalAddress,
 		ControlURL:         internalAddress,
 		ClusterStoreDriver: dbConfigs.StoreDriver,
-		ClusterStoreURL:    dbConfigs.StoreURL, //TODO: support more than one url
+		ClusterStoreURL:    dbConfigs.StoreURL,
+		ClusterTLSCert:		dbConfigs.DbTLSCert,
+		ClusterTLSKey:		dbConfigs.DbTLSKey,
+		ClusterTLSCa:		dbConfigs.DbTLSCa,
 		ClusterMode:        netConfigs.Mode,
 		NetworkMode:        netConfigs.NetworkMode,
 		NetForwardMode:     netConfigs.ForwardMode,

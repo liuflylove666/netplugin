@@ -381,7 +381,7 @@ func DeleteEndpointHandler(w http.ResponseWriter, r *http.Request, vars map[stri
 		return nil, err
 	}
 
-	log.Infof("Received DeleteEndpointRequest: %+v", epdelReq)
+	log.Infof("222Received DeleteEndpointRequest: %+v", epdelReq)
 
 	// Get the state driver
 	stateDriver, err := utils.GetStateDriver()
@@ -398,9 +398,15 @@ func DeleteEndpointHandler(w http.ResponseWriter, r *http.Request, vars map[stri
 	epID := getEpName(netID, &intent.ConfigEP{Container: epdelReq.EndpointID})
 
 	// delete the endpoint
+	log.Infof("222stateDriver: %+v", stateDriver)
+	log.Infof("222epID: %+v", epID)
+
+
+
 	epCfg, err := DeleteEndpointID(stateDriver, epID)
+        log.Infof("DeleteEndpointID111eRR:%+v", err)
 	if err != nil {
-		log.Errorf("Error deleting endpoint: %v", epID)
+		log.Errorf("111Error deleting endpoint: %v", epID)
 		return nil, err
 	}
 

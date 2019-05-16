@@ -23,11 +23,14 @@ import (
 	"encoding/json"
 
 	"github.com/contiv/netplugin/core"
+	log "github.com/Sirupsen/logrus"
 )
 
 const (
-	gBasePath              = StateBasePath + "master/"
-	gConfigPath            = gBasePath + "config/"
+	//gBasePath              = StateBasePath + "master/"
+	//gConfigPath            = gBasePath + "config/"
+	gBasePath              = StateBasePath + "obj/modeldb/"
+	gConfigPath            = gBasePath + "global/"
 	globalConfigPathPrefix = gConfigPath
 	globalConfigPath       = globalConfigPathPrefix + "global"
 )
@@ -35,10 +38,10 @@ const (
 // GlobConfig is the global configuration applicable to everything
 type GlobConfig struct {
 	core.CommonState
-	NwInfraType string `json:"nw-infra-type"`
-	FwdMode     string `json:"fwd-mode"`
-	ArpMode     string `json:"arp-mode"`
-	PvtSubnet   string `json:"pvt-subnet"`
+	NwInfraType string `json:"networkInfraType"`
+	FwdMode     string `json:"fwdMode"`
+	ArpMode     string `json:"arpMode"`
+	PvtSubnet   string `json:"pvtSubnet"`
 }
 
 //OldResState is used for global resource update
@@ -50,12 +53,15 @@ type OldResState struct {
 // Write the state
 func (s *GlobConfig) Write() error {
 	key := globalConfigPath
+	log.Infof("aaaaaaaWritekey:%+v", key)
 	return s.StateDriver.WriteState(key, s, json.Marshal)
 }
 
 // Read the state in for a given ID.
 func (s *GlobConfig) Read(id string) error {
 	key := globalConfigPath
+	log.Infof("aaaaaaaReadkey:%+v", key)
+	log.Infof("aaReadkey:%+v", s.StateDriver.ReadState(key, s, json.Unmarshal))
 	return s.StateDriver.ReadState(key, s, json.Unmarshal)
 }
 

@@ -16,6 +16,7 @@ limitations under the License.
 package objdb
 
 import (
+	"crypto/tls"
 	"errors"
 	"strings"
 
@@ -25,13 +26,17 @@ import (
 var defaultDbURL = "etcd://127.0.0.1:2379"
 
 // InitClient aims to support multi endpoints
-func InitClient(storeName string, storeURLs []string) (API, error) {
+func InitClient(storeName string, storeURLs []string, tlsConfig *tls.Config) (API, error) {
 	plugin := GetPlugin(storeName)
 	if plugin == nil {
 		log.Errorf("Invalid DB type %s", storeName)
 		return nil, errors.New("unsupported DB type")
 	}
-	cl, err := plugin.NewClient(storeURLs)
+
+
+	cl, err := plugin.NewClient(storeURLs, tlsConfig)
+
+
 	if err != nil {
 		log.Errorf("Error creating client %s to url %v. Err: %v", storeName, storeURLs, err)
 		return nil, err
@@ -41,6 +46,13 @@ func InitClient(storeName string, storeURLs []string) (API, error) {
 
 // NewClient Create a new conf store
 func NewClient(dbURL string) (API, error) {
+	return NewClientWithConfig(dbURL, nil)
+}
+
+
+
+// NewClientWithConfig Create a new conf store
+func NewClientWithConfig(dbURL string, tlsConfig *tls.Config) (API, error) {
 	// check if we should use default db
 	if dbURL == "" {
 		dbURL = defaultDbURL
@@ -54,5 +66,5 @@ func NewClient(dbURL string) (API, error) {
 	clientName := parts[0]
 	clientURL := parts[1]
 
-	return InitClient(clientName, []string{"http://" + clientURL})
+	return InitClient(clientName, []string{"http://" + clientURL}, tlsConfig)
 }

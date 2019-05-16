@@ -83,12 +83,15 @@ var cdb objdb.API
 
 // Init initializes the modeldb
 func Init(objdbClient *objdb.API) {
+	log.Infof("objdbClientfffff:%+v", objdbClient)
 	cdb = *objdbClient
 }
 
+
 // WriteObj writes the model to DB
 func WriteObj(objType, objKey string, value interface{}) error {
-	key := "/modeldb/" + objType + "/" + objKey
+	key := "modeldb/" + objType + "/" + objKey
+	log.Infof("WriteObj77777:%+v", key)
 	err := cdb.SetObj(key, value)
 	if err != nil {
 		log.Errorf("Error storing object %s. Err: %v", key, err)
@@ -100,7 +103,8 @@ func WriteObj(objType, objKey string, value interface{}) error {
 
 // ReadObj reads an object from DB
 func ReadObj(objType, objKey string, retVal interface{}) error {
-	key := "/modeldb/" + objType + "/" + objKey
+	key := "modeldb/" + objType + "/" + objKey
+	log.Infof("ReadObj77777:%+v", key)
 	err := cdb.GetObj(key, retVal)
 	if err != nil {
 		log.Errorf("Error reading object: %s. Err: %v", key, err)
@@ -112,7 +116,7 @@ func ReadObj(objType, objKey string, retVal interface{}) error {
 
 // DeleteObj deletes and object from DB
 func DeleteObj(objType, objKey string) error {
-	key := "/modeldb/" + objType + "/" + objKey
+	key := "modeldb/" + objType + "/" + objKey
 	err := cdb.DelObj(key)
 	if err != nil {
 		log.Errorf("Error deleting object: %s. Err: %v", key, err)
@@ -123,6 +127,6 @@ func DeleteObj(objType, objKey string) error {
 
 // ReadAllObj reads all objects of a type
 func ReadAllObj(objType string) ([]string, error) {
-	key := "/modeldb/" + objType + "/"
+	key := "modeldb/" + objType + "/"
 	return cdb.ListDir(key)
 }

@@ -83,10 +83,10 @@ func NewAPIController(router *mux.Router, objdbClient objdb.API, configs *APICon
 
 	// init modeldb
 	modeldb.Init(&objdbClient)
-
+	
 	// initialize the model objects
 	contivModel.Init()
-
+	
 	// Register Callbacks
 	contivModel.RegisterGlobalCallbacks(ctrler)
 	contivModel.RegisterAppProfileCallbacks(ctrler)
@@ -106,7 +106,7 @@ func NewAPIController(router *mux.Router, objdbClient objdb.API, configs *APICon
 
 	// Init global state from config
 	initGlobalConfigs(configs)
-
+	
 	// Add default tenant if it doesnt exist
 	tenant := contivModel.FindTenant("default")
 	if tenant == nil {
@@ -142,12 +142,14 @@ func initGlobalConfigs(configs *APIControllerConfig) error {
 	}
 
 	globalConfig := contivModel.FindGlobal("global")
+	log.Infof("globalConfigssss:%+v", globalConfig)
 	if globalConfig == nil {
 		globalConfig = &contivModel.Global{
 			Key:  "global",
 			Name: "global",
 		}
 	}
+	log.Infof("Run initGlobalConfigs:%+v", globalConfig)
 	// set value from config
 	globalConfig.NetworkInfraType = configs.NetInfraType
 	globalConfig.FwdMode = configs.NetForwardMode
@@ -161,7 +163,7 @@ func initGlobalConfigs(configs *APIControllerConfig) error {
 	if err := contivModel.CreateGlobal(globalConfig); err != nil {
 		return fmt.Errorf("Error creating global state. Err: %v", err.Error())
 	}
-	log.Infof("Initiated global configs: %+v", globalConfig)
+	log.Infof("8888888Initiated global configs: %+v", globalConfig)
 	return nil
 }
 
@@ -215,10 +217,13 @@ func (ac *APIController) GlobalCreate(global *contivModel.Global) error {
 		FwdMode:     global.FwdMode,
 		ArpMode:     global.ArpMode,
 		PvtSubnet:   global.PvtSubnet,
+		ID:			 global.ID,
 	}
 
 	// Create the object
 	err = master.CreateGlobal(stateDriver, &gCfg)
+	log.Infof("Run GlobalCreate fun sssssss2333")
+
 	if err != nil {
 		log.Errorf("Error creating global config {%+v}. Err: %v", global, err)
 		return err

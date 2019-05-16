@@ -118,6 +118,7 @@ func (gc *Cfg) Write() error {
 // Read the state
 func (gc *Cfg) Read(dummy string) error {
 	key := cfgGlobalPath
+	log.Infof("gstate_Readkey144444:%v", key)
 	return gc.StateDriver.ReadState(key, gc, json.Unmarshal)
 }
 

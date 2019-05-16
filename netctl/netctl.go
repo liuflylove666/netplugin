@@ -19,12 +19,14 @@ import (
 	"github.com/codegangsta/cli"
 	contivClient "github.com/contiv/netplugin/contivmodel/client"
 	"github.com/contiv/netplugin/version"
+	log "github.com/Sirupsen/logrus"
 )
 
 // DefaultMaster is the master to use when none is provided.
 const DefaultMaster = "http://netmaster:9999"
 
 func getClient(ctx *cli.Context) *contivClient.ContivClient {
+        log.Infof("aaaaaa")
 	cl, err := contivClient.NewContivClient(ctx.GlobalString("netmaster"))
 	if err != nil {
 		errExit(ctx, 1, "Error connecting to netmaster", false)
@@ -953,6 +955,7 @@ func showGlobal(ctx *cli.Context) {
 	}
 
 	list, err := getClient(ctx).GlobalList()
+        log.Infof("fffffgetglobal:%+v", list)
 	errCheck(ctx, err)
 
 	if ctx.Bool("json") {

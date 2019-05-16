@@ -1,9 +1,9 @@
 package objdb
 
 import (
-	"sync"
-
+	"crypto/tls"
 	log "github.com/Sirupsen/logrus"
+	"sync"
 )
 
 // Lock event types
@@ -53,7 +53,7 @@ type ServiceInfo struct {
 	ServiceName string // Name of the service
 	Role        string // Role of the service. (leader, follower etc)
 	Version     string // Version string for the service
-	TTL         int    // TTL for this service
+	TTL         int64    // TTL for this service
 	HostAddr    string // Host name or IP address where its running
 	Port        int    // Port number where its listening
 	Hostname    string // Host name where its running
@@ -65,6 +65,11 @@ const (
 	WatchServiceEventDel          // A service endpoint was deleted
 	WatchServiceEventError        // Error occurred while watching for service
 )
+// Config : config of plugins
+//type Config struct {
+//	TLS     *tls.Config
+//}
+
 
 // WatchServiceEvent : watch event on services
 type WatchServiceEvent struct {
@@ -75,11 +80,12 @@ type WatchServiceEvent struct {
 // Plugin interface
 type Plugin interface {
 	// Initialize the plugin, only called once
-	NewClient(endpoints []string) (API, error)
+	NewClient(endpoints []string, tlsConfig *tls.Config) (API, error)
 }
 
 // API Plugin API
 type API interface {
+
 	// Get a Key from conf store
 	GetObj(key string, retValue interface{}) error
 

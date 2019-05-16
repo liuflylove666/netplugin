@@ -1330,10 +1330,11 @@ func (c *ContivClient) GlobalPost(obj *Global) error {
 func (c *ContivClient) GlobalList() (*[]*Global, error) {
 	// build key and URL
 	url := c.baseURL + "/api/v1/globals/"
-
+	log.Infof("GlobalListhttpGet11:+v", url)
 	// http get the object
 	var objList []*Global
 	err := c.httpGet(url, &objList)
+	
 	if err != nil {
 		log.Debugf("Error getting globals. Err: %v", err)
 		return nil, err

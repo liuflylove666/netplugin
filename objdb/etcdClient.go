@@ -16,15 +16,17 @@ limitations under the License.
 package objdb
 
 import (
+	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"sync"
 	"time"
+	"fmt"
 
 	"golang.org/x/net/context"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/coreos/etcd/client"
+	client "go.etcd.io/etcd/clientv3"
 )
 
 type etcdPlugin struct {
@@ -33,8 +35,7 @@ type etcdPlugin struct {
 
 // EtcdClient has etcd client state
 type EtcdClient struct {
-	client client.Client // etcd client
-	kapi   client.KeysAPI
+	client *client.Client
 
 	serviceDb map[string]*etcdServiceState
 }
@@ -48,37 +49,44 @@ func init() {
 }
 
 // Initialize the etcd client
-func (ep *etcdPlugin) NewClient(endpoints []string) (API, error) {
+func (ep *etcdPlugin) NewClient(endpoints []string, tlsConfig *tls.Config) (API, error) {
 	var err error
 	var ec = new(EtcdClient)
 
 	ep.mutex.Lock()
 	defer ep.mutex.Unlock()
 
+
+
+
+	log.Infof("etcd-tls-config:%+v", tlsConfig)
 	// Setup default url
 	if len(endpoints) == 0 {
 		endpoints = []string{"http://127.0.0.1:2379"}
 	}
 
-	etcdConfig := client.Config{
+
+	cfg := client.Config{
 		Endpoints: endpoints,
+		TLS:	tlsConfig,
 	}
 
 	// Create a new client
-	ec.client, err = client.New(etcdConfig)
+	ec.client, err = client.New(cfg)
 	if err != nil {
 		log.Fatalf("Error creating etcd client. Err: %v", err)
 		return nil, err
 	}
 
 	// create keys api
-	ec.kapi = client.NewKeysAPI(ec.client)
+	// ec.kapi = client.NewKeysAPI(ec.client)
 
 	// Initialize service DB
 	ec.serviceDb = make(map[string]*etcdServiceState)
 
 	// Make sure we can read from etcd
-	_, err = ec.kapi.Get(context.Background(), "/", &client.GetOptions{Recursive: true, Sort: true})
+	// _, err = ec.kapi.Get(context.Background(), "/", &client.GetOptions{Recursive: true, Sort: true})
+	ec.client.KV.Get(context.Background(), "test")
 	if err != nil {
 		log.Errorf("Failed to connect to etcd. Err: %v", err)
 		return nil, err
@@ -89,15 +97,18 @@ func (ep *etcdPlugin) NewClient(endpoints []string) (API, error) {
 
 // GetObj Get an object
 func (ep *EtcdClient) GetObj(key string, retVal interface{}) error {
+	log.Infof(`objdb: getting "%s"`, key)
 	keyName := "/contiv.io/obj/" + key
 
 	// Get the object from etcd client
-	resp, err := ep.kapi.Get(context.Background(), keyName, &client.GetOptions{Quorum: true})
+	// resp, err := ep.kapi.Get(context.Background(), keyName, &client.GetOptions{Quorum: true})
+	resp, err := ep.client.KV.Get(context.Background(), keyName)
 	if err != nil {
 		// Retry few times if cluster is unavailable
-		if err.Error() == client.ErrClusterUnavailable.Error() {
+		if err.Error() == client.ErrNoAvailableEndpoints.Error() {
 			for i := 0; i < maxEtcdRetries; i++ {
-				resp, err = ep.kapi.Get(context.Background(), keyName, &client.GetOptions{Quorum: true})
+				// resp, err = ep.kapi.Get(context.Background(), keyName, &client.GetOptions{Quorum: true})
+				resp, err = ep.client.KV.Get(context.Background(), keyName)
 				if err == nil {
 					break
 				}
@@ -112,46 +123,34 @@ func (ep *EtcdClient) GetObj(key string, retVal interface{}) error {
 		}
 	}
 
+	if resp.Count == 0 {
+		msg := "Key " + keyName + " not found"
+		log.Errorf(msg)
+		return errors.New(msg)
+	}
+
 	// Parse JSON response
-	if err := json.Unmarshal([]byte(resp.Node.Value), retVal); err != nil {
-		log.Errorf("Error parsing object %s, Err %v", resp.Node.Value, err)
+	if err := json.Unmarshal(resp.Kvs[0].Value, retVal); err != nil {
+		log.Errorf("Error parsing object %s, Err %v", resp.Kvs[0].Value, err)
 		return err
 	}
 
 	return nil
 }
 
-// Recursive function to look thru each directory and get the files
-func recursAddNode(node *client.Node, list []string) []string {
-	for _, innerNode := range node.Nodes {
-		// add only the files.
-		if !innerNode.Dir {
-			list = append(list, innerNode.Value)
-		} else {
-			list = recursAddNode(innerNode, list)
-		}
-	}
-
-	return list
-}
 
 // ListDir Get a list of objects in a directory
 func (ep *EtcdClient) ListDir(key string) ([]string, error) {
 	keyName := "/contiv.io/obj/" + key
 
-	getOpts := client.GetOptions{
-		Recursive: true,
-		Sort:      true,
-		Quorum:    true,
-	}
 
 	// Get the object from etcd client
-	resp, err := ep.kapi.Get(context.Background(), keyName, &getOpts)
+	resp, err := ep.client.KV.Get(context.Background(), keyName, client.WithPrefix(), client.WithSort(client.SortByKey, client.SortAscend))
 	if err != nil {
 		// Retry few times if cluster is unavailable
-		if err.Error() == client.ErrClusterUnavailable.Error() {
+		if err.Error() == client.ErrNoAvailableEndpoints.Error() {
 			for i := 0; i < maxEtcdRetries; i++ {
-				resp, err = ep.kapi.Get(context.Background(), keyName, &getOpts)
+				resp, err = ep.client.KV.Get(context.Background(), keyName, client.WithPrefix(), client.WithSort(client.SortByKey, client.SortAscend))
 				if err == nil {
 					break
 				}
@@ -164,24 +163,21 @@ func (ep *EtcdClient) ListDir(key string) ([]string, error) {
 			return nil, err
 		}
 	}
-
-	if !resp.Node.Dir {
-		log.Errorf("ListDir response is not a directory")
-		return nil, errors.New("Response is not directory")
+	if resp.Count == 0 {
+		return nil,  fmt.Errorf("Key not found") 
 	}
-
 	var retList []string
-	// Call a recursive function to recurse thru each directory and get all files
-	// Warning: assumes directory itep is not interesting to the caller
-	// Warning2: there is also an assumption that keynames are not required
-	//           Which means, caller has to derive the key from value :(
-	retList = recursAddNode(resp.Node, retList)
 
+	// convert all the keys into strings (etcd3 doesn't have directories)
+	for _, kv := range resp.Kvs {
+		retList = append(retList, string(kv.Value))
+	}
 	return retList, nil
 }
 
 // SetObj Save an object, create if it doesnt exist
 func (ep *EtcdClient) SetObj(key string, value interface{}) error {
+	log.Infof(`objdb: setting "%s"`, key)
 	keyName := "/contiv.io/obj/" + key
 
 	// JSON format the object
@@ -192,12 +188,14 @@ func (ep *EtcdClient) SetObj(key string, value interface{}) error {
 	}
 
 	// Set it via etcd client
-	_, err = ep.kapi.Set(context.Background(), keyName, string(jsonVal[:]), nil)
+	
+	log.Infof(`objdb: jsonVal "%s"`, string(jsonVal[:]))
+	_, err = ep.client.KV.Put(context.Background(), keyName, string(jsonVal[:]))
 	if err != nil {
 		// Retry few times if cluster is unavailable
-		if err.Error() == client.ErrClusterUnavailable.Error() {
+		if err.Error() == client.ErrNoAvailableEndpoints.Error() {
 			for i := 0; i < maxEtcdRetries; i++ {
-				_, err = ep.kapi.Set(context.Background(), keyName, string(jsonVal[:]), nil)
+				_, err = ep.client.KV.Put(context.Background(), keyName, string(jsonVal[:]))
 				if err == nil {
 					break
 				}
@@ -217,15 +215,16 @@ func (ep *EtcdClient) SetObj(key string, value interface{}) error {
 
 // DelObj Remove an object
 func (ep *EtcdClient) DelObj(key string) error {
+	log.Infof(`objdb: deleting "%s"`, key)
 	keyName := "/contiv.io/obj/" + key
 
 	// Remove it via etcd client
-	_, err := ep.kapi.Delete(context.Background(), keyName, nil)
+	_, err := ep.client.KV.Delete(context.Background(), keyName)
 	if err != nil {
 		// Retry few times if cluster is unavailable
-		if err.Error() == client.ErrClusterUnavailable.Error() {
+		if err.Error() == client.ErrNoAvailableEndpoints.Error() {
 			for i := 0; i < maxEtcdRetries; i++ {
-				_, err = ep.kapi.Delete(context.Background(), keyName, nil)
+				_, err = ep.client.KV.Delete(context.Background(), keyName)
 				if err == nil {
 					break
 				}

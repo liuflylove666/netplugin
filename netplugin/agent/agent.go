@@ -50,7 +50,7 @@ func NewAgent(pluginConfig *plugin.Config) *Agent {
 	netPlugin := &plugin.NetPlugin{}
 
 	// init cluster state
-	err := cluster.Init(pluginConfig.Drivers.State, []string{opts.DbURL})
+	err := cluster.Init(pluginConfig.Drivers.State, opts.DbURL,opts.DbTLSCert, opts.DbTLSKey, opts.DbTLSCa)
 	if err != nil {
 		log.Fatalf("Error initializing cluster. Err: %v", err)
 	}
@@ -309,7 +309,7 @@ func (ag *Agent) ReclaimEndpointHandler(w http.ResponseWriter, r *http.Request, 
 	// delete the endpoint
 	err := ag.netPlugin.DeleteEndpoint(epID)
 	if err != nil {
-		log.Errorf("Error deleting endpoint %v. Err: %v", epID, err)
+		log.Errorf("11111Error deleting endpoint %v. Err: %v", epID, err)
 		http.Error(w, fmt.Sprintf("failed to delete endpoint: %+v", epID), 0)
 		return nil, err
 	}

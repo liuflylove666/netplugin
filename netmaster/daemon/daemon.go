@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"go.etcd.io/etcd/pkg/transport"
 	"net"
 	"net/http"
 	"strconv"
@@ -50,7 +51,10 @@ type MasterDaemon struct {
 	ListenURL          string // URL where netmaster listens for ext requests
 	ControlURL         string // URL where netmaster listens for ctrl pkts
 	ClusterStoreDriver string // state store driver name
-	ClusterStoreURL    string // state store endpoint
+	ClusterStoreURL    []string // state store endpoint
+	ClusterTLSCert     string
+	ClusterTLSKey      string
+	ClusterTLSCa       string
 	ClusterMode        string // cluster scheduler used docker/kubernetes/mesos etc
 	NetworkMode        string // network mode (vlan or vxlan)
 	NetForwardMode     string // forwarding mode (bridge or routing)
@@ -79,9 +83,10 @@ func (d *MasterDaemon) Init() {
 	}
 
 	// initialize state driver
-	d.stateDriver, err = utils.NewStateDriver(d.ClusterStoreDriver, &core.InstanceInfo{DbURL: d.ClusterStoreURL})
+	d.stateDriver, err = utils.NewStateDriver(d.ClusterStoreDriver, &core.InstanceInfo{DbURL: d.ClusterStoreURL,
+							DbTLSCert: d.ClusterTLSCert, DbTLSKey:d.ClusterTLSKey, DbTLSCa:d.ClusterTLSCa})
 	if err != nil {
-		log.Fatalf("Failed to init state-store: driver %q, URLs %q. Error: %s", d.ClusterStoreDriver, d.ClusterStoreURL, err)
+		log.Fatalf("Failed to init state-store: driver %q, URLs %v. Error: %s", d.ClusterStoreDriver, d.ClusterStoreURL, err)
 	}
 
 	// Initialize resource manager
@@ -90,10 +95,26 @@ func (d *MasterDaemon) Init() {
 		log.Fatalf("Failed to init resource manager. Error: %s", err)
 	}
 
-	// Create an objdb client
-	d.objdbClient, err = objdb.InitClient(d.ClusterStoreDriver, []string{d.ClusterStoreURL})
+
+
+	tlsInfo := transport.TLSInfo{
+		CertFile: d.ClusterTLSCert,
+		KeyFile:  d.ClusterTLSKey,
+		TrustedCAFile:   d.ClusterTLSCa,
+	}
+	tlsConfig, err := tlsInfo.ClientConfig()
 	if err != nil {
-		log.Fatalf("Error connecting to state store: driver %q, URLs %q. Err: %v", d.ClusterStoreDriver, d.ClusterStoreURL, err)
+		log.Fatalf("error tlsInfo  Format. Err: %v", err)
+	}
+
+	if len(d.ClusterTLSCert) ==0 && len(d.ClusterTLSKey) ==0 &&  len(d.ClusterTLSCa) ==0  {
+		tlsConfig = nil
+	}
+
+	// Create an objdb client
+	d.objdbClient, err = objdb.InitClient(d.ClusterStoreDriver, d.ClusterStoreURL, tlsConfig)
+	if err != nil {
+		log.Fatalf("Error connecting to state store: driver %q, URLs %v. Err: %v", d.ClusterStoreDriver, d.ClusterStoreURL, err)
 	}
 }
 
@@ -407,12 +428,13 @@ func getEpName(networkName string, ep *intent.ConfigEP) string {
 // runLeader runs leader loop
 func (d *MasterDaemon) runLeader() {
 	router := mux.NewRouter()
-
+	
 	// Create a new api controller
 	apiConfig := &objApi.APIControllerConfig{
 		NetForwardMode: d.NetForwardMode,
 		NetInfraType:   d.NetInfraType,
 	}
+
 	d.apiController = objApi.NewAPIController(router, d.objdbClient, apiConfig)
 
 	//Restore state from clusterStore

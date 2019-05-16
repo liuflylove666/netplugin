@@ -204,7 +204,7 @@ type Global struct {
 	PvtSubnet        string `json:"pvtSubnet,omitempty"`        // Private Subnet used by host bridge
 	Vlans            string `json:"vlans,omitempty"`            // Allowed vlan range
 	Vxlans           string `json:"vxlans,omitempty"`           // Allwed vxlan range
-
+	ID				 string `json:"id"`
 }
 
 type GlobalOper struct {
@@ -1354,8 +1354,9 @@ func restoreAciGw() error {
 		// Parse the json model
 		var aciGw AciGw
 		err = json.Unmarshal([]byte(objStr), &aciGw)
+		log.Infof("parsing object:%s", objStr)
 		if err != nil {
-			log.Errorf("Error parsing object %s, Err %v", objStr, err)
+			log.Errorf("126Error parsing object %s, Err %v", objStr, err)
 			return err
 		}
 
@@ -1698,8 +1699,9 @@ func restoreAppProfile() error {
 		// Parse the json model
 		var appProfile AppProfile
 		err = json.Unmarshal([]byte(objStr), &appProfile)
+		log.Infof("parsing object:%s", objStr)
 		if err != nil {
-			log.Errorf("Error parsing object %s, Err %v", objStr, err)
+			log.Errorf("127Error parsing object %s, Err %v", objStr, err)
 			return err
 		}
 
@@ -2029,8 +2031,9 @@ func restoreBgp() error {
 		// Parse the json model
 		var Bgp Bgp
 		err = json.Unmarshal([]byte(objStr), &Bgp)
+		log.Infof("parsing object:%s", objStr)
 		if err != nil {
-			log.Errorf("Error parsing object %s, Err %v", objStr, err)
+			log.Errorf("128Error parsing object %s, Err %v", objStr, err)
 			return err
 		}
 
@@ -2407,8 +2410,9 @@ func restoreEndpointGroup() error {
 		// Parse the json model
 		var endpointGroup EndpointGroup
 		err = json.Unmarshal([]byte(objStr), &endpointGroup)
+		log.Infof("parsing object:%s", objStr)
 		if err != nil {
-			log.Errorf("Error parsing object %s, Err %v", objStr, err)
+			log.Errorf("130Error parsing object %s, Err %v", objStr, err)
 			return err
 		}
 
@@ -2742,8 +2746,9 @@ func restoreExtContractsGroup() error {
 		// Parse the json model
 		var extContractsGroup ExtContractsGroup
 		err = json.Unmarshal([]byte(objStr), &extContractsGroup)
+		log.Infof("parsing object:%s", objStr)
 		if err != nil {
-			log.Errorf("Error parsing object %s, Err %v", objStr, err)
+			log.Errorf("131Error parsing object %s, Err %v", objStr, err)
 			return err
 		}
 
@@ -2849,7 +2854,7 @@ func httpListGlobals(w http.ResponseWriter, r *http.Request, vars map[string]str
 
 // GET REST call
 func httpGetGlobal(w http.ResponseWriter, r *http.Request, vars map[string]string) (interface{}, error) {
-	log.Debugf("Received httpGetGlobal: %+v", vars)
+	log.Infof("Received httpGetGlobal: %+v", vars)
 
 	key := vars["key"]
 
@@ -2867,7 +2872,7 @@ func httpGetGlobal(w http.ResponseWriter, r *http.Request, vars map[string]strin
 
 // CREATE REST call
 func httpCreateGlobal(w http.ResponseWriter, r *http.Request, vars map[string]string) (interface{}, error) {
-	log.Debugf("Received httpGetGlobal: %+v", vars)
+	log.Infof("Received httpGetGlobal: %+v", vars)
 
 	var obj Global
 	key := vars["key"]
@@ -3073,8 +3078,9 @@ func restoreGlobal() error {
 		// Parse the json model
 		var global Global
 		err = json.Unmarshal([]byte(objStr), &global)
+		log.Infof("parsing object:%s", objStr)
 		if err != nil {
-			log.Errorf("Error parsing object %s, Err %v", objStr, err)
+			log.Errorf("132Error parsing object %s, Err %v", objStr, err)
 			return err
 		}
 
@@ -3414,8 +3420,9 @@ func restoreNetprofile() error {
 		// Parse the json model
 		var netprofile Netprofile
 		err = json.Unmarshal([]byte(objStr), &netprofile)
+		log.Infof("parsing object:%s", objStr)
 		if err != nil {
-			log.Errorf("Error parsing object %s, Err %v", objStr, err)
+			log.Errorf("133Error parsing object %s, Err %v", objStr, err)
 			return err
 		}
 
@@ -3752,8 +3759,9 @@ func restoreNetwork() error {
 		// Parse the json model
 		var network Network
 		err = json.Unmarshal([]byte(objStr), &network)
+		log.Infof("parsing object:%s", objStr)
 		if err != nil {
-			log.Errorf("Error parsing object %s, Err %v", objStr, err)
+			log.Errorf("134Error parsing object %s, Err %v", objStr, err)
 			return err
 		}
 
@@ -4130,8 +4138,9 @@ func restorePolicy() error {
 		// Parse the json model
 		var policy Policy
 		err = json.Unmarshal([]byte(objStr), &policy)
+		log.Infof("parsing object:%s", objStr)
 		if err != nil {
-			log.Errorf("Error parsing object %s, Err %v", objStr, err)
+			log.Errorf("111Error parsing object %s, Err %v", objStr, err)
 			return err
 		}
 
@@ -4438,8 +4447,9 @@ func restoreRule() error {
 		// Parse the json model
 		var rule Rule
 		err = json.Unmarshal([]byte(objStr), &rule)
+		log.Infof("parsing object:%s", objStr)
 		if err != nil {
-			log.Errorf("Error parsing object %s, Err %v", objStr, err)
+			log.Errorf("222Error parsing object %s, Err %v", objStr, err)
 			return err
 		}
 
@@ -4855,8 +4865,9 @@ func restoreServiceLB() error {
 		// Parse the json model
 		var serviceLB ServiceLB
 		err = json.Unmarshal([]byte(objStr), &serviceLB)
+		log.Infof("parsing object:%s", objStr)
 		if err != nil {
-			log.Errorf("Error parsing object %s, Err %v", objStr, err)
+			log.Errorf("112Error parsing object %s, Err %v", objStr, err)
 			return err
 		}
 
@@ -5204,8 +5215,9 @@ func restoreTenant() error {
 		// Parse the json model
 		var tenant Tenant
 		err = json.Unmarshal([]byte(objStr), &tenant)
+		log.Infof("parsing object:%s", objStr)
 		if err != nil {
-			log.Errorf("Error parsing object %s, Err %v", objStr, err)
+			log.Errorf("123Error parsing object %s, Err %v", objStr, err)
 			return err
 		}
 
@@ -5512,8 +5524,9 @@ func restoreVolume() error {
 		// Parse the json model
 		var volume Volume
 		err = json.Unmarshal([]byte(objStr), &volume)
+		log.Infof("parsing object:%s", objStr)
 		if err != nil {
-			log.Errorf("Error parsing object %s, Err %v", objStr, err)
+			log.Errorf("124Error parsing object %s, Err %v", objStr, err)
 			return err
 		}
 
@@ -5802,8 +5815,9 @@ func restoreVolumeProfile() error {
 		// Parse the json model
 		var volumeProfile VolumeProfile
 		err = json.Unmarshal([]byte(objStr), &volumeProfile)
+		log.Infof("parsing object:%s", objStr)
 		if err != nil {
-			log.Errorf("Error parsing object %s, Err %v", objStr, err)
+			log.Errorf("125Error parsing object %s, Err %v", objStr, err)
 			return err
 		}
 

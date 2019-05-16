@@ -25,6 +25,7 @@ type ConfigGlobal struct {
 	FwdMode     string
 	ArpMode     string
 	PvtSubnet   string
+	ID          string
 }
 
 // ConfigEP encapulsates an endpoint: a leg into a network

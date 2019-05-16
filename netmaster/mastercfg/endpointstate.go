@@ -18,6 +18,7 @@ package mastercfg
 import (
 	"encoding/json"
 	"fmt"
+        log "github.com/Sirupsen/logrus"
 
 	"github.com/contiv/netplugin/core"
 )
@@ -51,6 +52,7 @@ func (s *CfgEndpointState) Write() error {
 // Read the state for a given identifier.
 func (s *CfgEndpointState) Read(id string) error {
 	key := fmt.Sprintf(endpointConfigPath, id)
+	log.Infof("Readkey11111:%+v", key)
 	return s.StateDriver.ReadState(key, s, json.Unmarshal)
 }
 

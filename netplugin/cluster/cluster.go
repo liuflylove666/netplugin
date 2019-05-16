@@ -18,16 +18,16 @@ package cluster
 import (
 	"errors"
 	"fmt"
+	"go.etcd.io/etcd/pkg/transport"
 	"strconv"
 	"strings"
 	"time"
 
+	log "github.com/Sirupsen/logrus"
 	"github.com/contiv/netplugin/core"
 	"github.com/contiv/netplugin/netplugin/plugin"
 	"github.com/contiv/netplugin/objdb"
 	"github.com/contiv/netplugin/utils"
-
-	log "github.com/Sirupsen/logrus"
 )
 
 // This file implements netplugin <-> netmaster clustering
@@ -309,11 +309,35 @@ func peerDiscoveryLoop(netplugin *plugin.NetPlugin, objClient objdb.API, ctrlIP,
 }
 
 // Init initializes the cluster module
-func Init(storeDriver string, storeURLs []string) error {
+func Init(storeDriver string, storeURLs []string, dbCert, dbKey, dbCa string) error {
 	var err error
 
+	//config := &objdb.Config{}
+	//if len(dbCert) ==0 && len(dbKey) ==0 &&  len(dbKey) ==0 {
+	//	config = nil
+	//} else {
+	//	tlsConfig, err := netutils.GetTLSConfigFromCerts(dbCert, dbKey, dbCacert)
+	//	if err = nil {
+	//		config.TLS = tlsConfig
+	//	}
+	//}
+	tlsInfo := transport.TLSInfo{
+		CertFile:		 dbCert,
+		KeyFile:  		 dbKey,
+		TrustedCAFile:   dbCa,
+	}
+	tlsConfig, err := tlsInfo.ClientConfig()
+	if err != nil {
+		log.Fatalf("error tlsInfo  Format. Err: %v", err)
+	}
+
+	if len(dbCert) ==0 && len(dbCert) ==0 &&  len(dbCert) ==0  {
+		tlsConfig = nil
+	}
+
+
 	// Create an objdb client
-	ObjdbClient, err = objdb.InitClient(storeDriver, storeURLs)
+	ObjdbClient, err = objdb.InitClient(storeDriver, storeURLs, tlsConfig)
 
 	return err
 }

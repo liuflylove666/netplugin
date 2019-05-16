@@ -104,6 +104,7 @@ func initNetPluginConfig(ctx *cli.Context) (*plugin.Config, error) {
 	vxlanPort := ctx.Int("vxlan-port")
 	logrus.Infof("Using netplugin vxlan port: %v", vxlanPort)
 
+	logrus.Infof("dbConfigs:%+v", dbConfigs)
 	return &plugin.Config{
 		Drivers: plugin.Drivers{
 			Network: utils.OvsNameStr,
@@ -115,6 +116,9 @@ func initNetPluginConfig(ctx *cli.Context) (*plugin.Config, error) {
 			VtepIP:       vtepIP,
 			UplinkIntf:   vlanUpLinks,
 			DbURL:        dbConfigs.StoreURL,
+			DbTLSCert:	  dbConfigs.DbTLSCert,
+			DbTLSKey:	  dbConfigs.DbTLSKey,
+			DbTLSCa:	  dbConfigs.DbTLSCa,
 			PluginMode:   netConfigs.Mode,
 			VxlanUDPPort: vxlanPort,
 			FwdMode:      netConfigs.ForwardMode, // TODO: pass in network mode
@@ -154,6 +158,7 @@ func main() {
 			Usage:  "set netplugin VXLAN port",
 		},
 	}
+
 	app.Flags = utils.FlattenFlags(netpluginFlags, utils.BuildDBFlags(binName), utils.BuildNetworkFlags(binName), utils.BuildLogFlags(binName))
 	sort.Sort(cli.FlagsByName(app.Flags))
 	app.Action = func(ctx *cli.Context) error {
