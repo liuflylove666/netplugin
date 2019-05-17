@@ -62,6 +62,9 @@ func InitKubServiceWatch(np *plugin.NetPlugin) {
 
 	svcCh := make(chan SvcWatchResp, 1)
 	epCh := make(chan EpWatchResp, 1)
+
+	log.Infof("aaaaaaaaaaaaaaaaab:",svcCh)
+	log.Infof("aaaaaaaaaaaaaaaaab1:",epCh)
 	go func() {
 		for {
 			select {
@@ -104,6 +107,8 @@ func InitKubServiceWatch(np *plugin.NetPlugin) {
 		}
 	}()
 
+	log.Infof("aaaaaaaaaaaaaaaaa:",svcCh)
+	log.Infof("aaaaaaaaaaaaaaaaa1:",epCh)
 	watchClient.WatchServices(svcCh)
 	watchClient.WatchSvcEps(epCh)
 }

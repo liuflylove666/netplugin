@@ -285,15 +285,11 @@ func DeleteEndpoints(hostAddr string) error {
 
 // DeleteEndpointID deletes an endpoint by ID.
 func DeleteEndpointID(stateDriver core.StateDriver, epID string) (*mastercfg.CfgEndpointState, error) {
-        log.Infof("YYYYYYYYYYYYYYYYYY")
 	epCfg := &mastercfg.CfgEndpointState{}
 	var epgCfg *mastercfg.EndpointGroupState
 
 	epCfg.StateDriver = stateDriver
-	log.Infof("fffggggnwCfffsxxxfg:%+v", epCfg)
-	log.Infof("effff11111:%+v", epID)
 	err := epCfg.Read(epID)
-	log.Infof("ggggReadERR0000:%+v", err)
 	if err != nil {
 		return nil, err
 	}
@@ -301,11 +297,7 @@ func DeleteEndpointID(stateDriver core.StateDriver, epID string) (*mastercfg.Cfg
 	nwCfg := &mastercfg.CfgNetworkState{}
 	nwCfg.StateDriver = stateDriver
 
-	log.Infof("ggggnwCfg:%+v", nwCfg)
-	log.Infof("ggggnwCfg-StateDriver:%+v", nwCfg.StateDriver)
-	log.Infof("ggggNetID:%+v", epCfg.NetID)
 	err = nwCfg.Read(epCfg.NetID)
-	log.Infof("ggggNetIDERR0000:%+v", err)
 
 	// Network may already be deleted if infra nw
 	// If network present, free up nw resources
